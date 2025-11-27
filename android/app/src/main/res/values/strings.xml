@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Agriport</string>
+    <string name="title_activity_main">Agriport</string>
+    <string name="package_name">com.Agriport.transport</string>
+    <string name="custom_url_scheme">com.Agriport.transport</string>
+</resources>

@@ -1,0 +1,6 @@
+{
+  "appId": "com.example.myvueapp",
+  "appName": "MyVueApp",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
