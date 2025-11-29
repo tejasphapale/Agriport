@@ -61,10 +61,49 @@
       </form>
     </section>
 
+    <!-- FILTER SECTION -->
+    <section class="card fade-in">
+      <h3 class="card-title">🔍 नोंदी फिल्टर करा</h3>
+
+      <div class="filter-box">
+
+        <input v-model="filter.name" placeholder="👤 नावाने शोधा" />
+
+        <input v-model="filter.date" type="date" />
+
+        <select v-model="filter.month">
+          <option value="">महिना</option>
+          <option v-for="m in 12" :key="m" :value="m">{{ m }} महिना</option>
+        </select>
+
+        <select v-model="filter.year">
+          <option value="">वर्ष</option>
+          <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+        </select>
+
+        <button class="btn-small" @click="filterToday">आज</button>
+        <button class="btn-small" @click="filterWeek">या आठवड्यातील</button>
+
+        <button class="btn-small clear" @click="clearFilters">❌ क्लिअर</button>
+
+      </div>
+    </section>
+
+    <!-- Export Section -->
+    <section class="card fade-in">
+      <h3 class="card-title">📤 नोंदी एक्सपोर्ट करा</h3>
+
+      <div class="export-buttons">
+        <button class="btn-primary" @click="downloadCSV">📄 CSV डाउनलोड</button>
+        <button class="btn-primary" @click="downloadPDF">📕 PDF डाउनलोड</button>
+      </div>
+    </section>
+
     <!-- Payment / Records Table -->
     <section class="card fade-in">
       <h3 class="card-title">📋 वाहतूक नोंदी व पेमेंट्स</h3>
-      <div class="table-responsive" v-if="paginatedData.length">
+
+      <div class="table-responsive" v-if="filteredPaginated.length">
         <table>
           <thead>
             <tr>
@@ -77,22 +116,24 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in paginatedData" :key="item.id">
+            <tr v-for="item in filteredPaginated" :key="item.id">
               <td class="cell-left">{{ item.customer }}</td>
               <td>{{ item.mobile }}</td>
               <td>{{ item.crop }}</td>
               <td>{{ item.crates }}</td>
               <td>{{ formatDate(item.date) }}</td>
               <td>
-                <input type="checkbox" v-model="item.paid" @change="saveRecords" /> {{ item.paid ? 'Paid' : 'Unpaid' }}
+                <input type="checkbox" v-model="item.paid" @change="saveRecords" />
+                {{ item.paid ? 'Paid' : 'Unpaid' }}
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
       <p v-else class="empty-msg">⚠ नोंदी सापडल्या नाहीत</p>
 
-      <div class="pagination" v-if="paginatedData.length">
+      <div class="pagination" v-if="filteredPaginated.length">
         <button @click="prevPage" :disabled="currentPage===1">⏮ मागे</button>
         <span>पृष्ठ {{ currentPage }} / {{ totalPages }}</span>
         <button @click="nextPage" :disabled="currentPage===totalPages">पुढे ⏭</button>
@@ -102,98 +143,157 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
+// Inputs
 const customer = ref('')
 const mobile = ref('')
 const crop = ref('')
 const crates = ref('')
 const date = ref('')
-const data = ref([])
-const currentPage = ref(1)
-const pageSize = 5
-const listeningTarget = ref(null)
-let recognition = null
 
-// Load records from localStorage
-onMounted(() => {
-  const stored = localStorage.getItem('transportRecords')
-  if(stored){
-    try{ data.value = JSON.parse(stored) }catch(e){ data.value=[] }
-  }
+// DATA STORAGE
+const data = ref([])
+
+// FILTERS
+const filter = ref({
+  name: '',
+  date: '',
+  month: '',
+  year: ''
 })
 
-// Save records to localStorage
-function saveRecords(){
+// PAGINATION
+const currentPage = ref(1)
+const pageSize = 7
+
+// Load Records
+onMounted(() => {
+  const stored = localStorage.getItem('transportRecords')
+  if (!stored) return
+  try { data.value = JSON.parse(stored) } catch (e) {}
+})
+
+// Save Records
+function saveRecords() {
   localStorage.setItem('transportRecords', JSON.stringify(data.value))
 }
 
-// Add new transport record
-function addRecord(){
-  const newRecord = {
+// Add New Record
+function addRecord() {
+  data.value.unshift({
     id: Date.now(),
     customer: customer.value,
     mobile: mobile.value,
     crop: crop.value,
     crates: crates.value,
-    date: date.value || new Date().toISOString(),
+    date: date.value,
     paid: false
-  }
-  data.value.unshift(newRecord)
+  })
   saveRecords()
   customer.value = mobile.value = crop.value = crates.value = date.value = ''
   currentPage.value = 1
 }
 
-// Computed lists
-const customerList = computed(()=>[...new Set(data.value.map(r=>r.customer).filter(Boolean))])
-const cropList = computed(()=>[...new Set(data.value.map(r=>r.crop).filter(Boolean))])
+// Unique Lists
+const customerList = computed(() => [...new Set(data.value.map(r => r.customer))])
+const cropList = computed(() => [...new Set(data.value.map(r => r.crop))])
+const years = computed(() => [...new Set(data.value.map(r => new Date(r.date).getFullYear()))])
 
-// Pagination
-const totalPages = computed(()=>Math.max(1, Math.ceil(data.value.length/pageSize)))
-const paginatedData = computed(()=>{
-  const start = (currentPage.value-1)*pageSize
-  return data.value.slice(start,start+pageSize)
+// ----------------------
+// FILTER LOGIC
+// ----------------------
+const filteredData = computed(() => {
+  return data.value.filter(r => {
+    const d = new Date(r.date)
+
+    return (
+      (!filter.value.name || r.customer.includes(filter.value.name)) &&
+      (!filter.value.date || r.date === filter.value.date) &&
+      (!filter.value.month || d.getMonth() + 1 == filter.value.month) &&
+      (!filter.value.year || d.getFullYear() == filter.value.year)
+    )
+  })
 })
-const nextPage=()=>{ if(currentPage.value<totalPages.value) currentPage.value++ }
-const prevPage=()=>{ if(currentPage.value>1) currentPage.value-- }
 
-// Format date in Marathi
-function formatDate(d){ return d? new Date(d).toLocaleDateString('mr-IN') : '' }
-
-// Speech Recognition
-function initSpeechRecognition(){
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-  if(!SpeechRecognition) return
-  recognition = new SpeechRecognition()
-  recognition.lang = 'mr-IN'
-  recognition.interimResults = true
-  recognition.maxAlternatives = 1
-  recognition.continuous = false
-
-  recognition.onresult = (event)=>{
-    let transcript = ''
-    for(let i=0;i<event.results.length;i++){ transcript+=event.results[i][0].transcript }
-    transcript = transcript.trim()
-    switch(listeningTarget.value){
-      case 'customer': customer.value = transcript; break;
-      case 'mobile': mobile.value = transcript.replace(/\D/g,'').slice(0,10); break;
-      case 'crop': crop.value = transcript; break;
-      case 'crates': crates.value = transcript.replace(/\D/g,''); break;
-    }
-  }
-
-  recognition.onend = ()=>{ listeningTarget.value=null }
+function clearFilters() {
+  filter.value = { name: '', date: '', month: '', year: '' }
 }
 
-function toggleMic(target){
-  if(!recognition) initSpeechRecognition()
-  if(listeningTarget.value===target){ recognition.stop(); listeningTarget.value=null; return }
-  if(listeningTarget.value){ recognition.stop(); listeningTarget.value=null }
-  listeningTarget.value = target
-  try{ recognition.start() } catch(e){ setTimeout(()=>{ try{ recognition.start() } catch(e){ listeningTarget.value=null } },250) }
+function filterToday() {
+  filter.value.date = new Date().toISOString().split("T")[0]
+}
+
+function filterWeek() {
+  const now = new Date()
+  const weekStart = new Date(now)
+  weekStart.setDate(now.getDate() - 7)
+  filter.value.date = ''
+  filter.value.month = ''
+  filter.value.year = ''
+
+  data.value = data.value.filter(r => new Date(r.date) >= weekStart)
+}
+
+// ----------------------
+// PAGINATION
+// ----------------------
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredData.value.length / pageSize))
+)
+
+const filteredPaginated = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredData.value.slice(start, start + pageSize)
+})
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) currentPage.value++
+}
+
+function prevPage() {
+  if (currentPage.value > 1) currentPage.value--
+}
+
+// ----------------------
+// EXPORT CSV
+// ----------------------
+function downloadCSV() {
+  const rows = filteredData.value.map(r =>
+    `${r.customer},${r.mobile},${r.crop},${r.crates},${r.date},${r.paid ? "Paid" : "Unpaid"}`
+  )
+
+  const csv =
+    "Customer,Mobile,Crop,Crates,Date,Paid\n" + rows.join("\n")
+
+  const blob = new Blob([csv], { type: "text/csv" })
+  const link = document.createElement("a")
+  link.href = URL.createObjectURL(blob)
+  link.download = "transport_records.csv"
+  link.click()
+}
+
+// ----------------------
+// EXPORT PDF
+// ----------------------
+function downloadPDF() {
+  const content = filteredData.value
+    .map(r => `${r.customer} | ${r.mobile} | ${r.crop} | ${r.crates} | ${r.date} | ${r.paid ? "Paid" : "Unpaid"}`)
+    .join("\n")
+
+  const blob = new Blob([content], { type: "application/pdf" })
+  const link = document.createElement("a")
+  link.href = URL.createObjectURL(blob)
+  link.download = "transport_records.pdf"
+  link.click()
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString("mr-IN")
 }
 </script>
+
+
 
 <style scoped>
 .page{padding:0.5rem; max-width:1100px;margin:auto;font-family:'Poppins',sans-serif;background:linear-gradient(145deg,#f1f8e9,#ffffff);border-radius:18px;box-shadow:0 6px 25px rgba(0,0,0,0.08);min-height:100vh;}
