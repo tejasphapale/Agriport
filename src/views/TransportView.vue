@@ -61,43 +61,62 @@
       </form>
     </section>
 
-    <!-- FILTER SECTION -->
+   <!-- FILTER SECTION -->
+<section class="card fade-in">
+  <h3 class="card-title">🔍 नोंदी फिल्टर करा</h3>
+
+  <div class="filter-grid">
+
+    <div class="filter-item">
+      <label>👤 ग्राहकाचे नाव</label>
+      <input v-model="filter.name" placeholder="नावाने शोधा" />
+    </div>
+
+    <div class="filter-item">
+      <label>📅 तारीख</label>
+      <input v-model="filter.date" type="date" />
+    </div>
+
+    <div class="filter-item">
+      <label>🗓 महिना</label>
+      <select v-model="filter.month">
+        <option value="">महिना निवडा</option>
+        <option v-for="m in 12" :key="m" :value="m">{{ m }} महिना</option>
+      </select>
+    </div>
+
+    <div class="filter-item">
+      <label>📆 वर्ष</label>
+      <select v-model="filter.year">
+        <option value="">वर्ष निवडा</option>
+        <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+      </select>
+    </div>
+
+  </div>
+
+  <div class="filter-actions">
+    <button class="btn-small" @click="filterToday">📌 आजचे</button>
+    <button class="btn-small" @click="filterWeek">🗓 आठवड्यातील</button>
+    <button class="btn-small clear" @click="clearFilters">❌ क्लिअर</button>
+  </div>
+</section>
+
+
     <section class="card fade-in">
-      <h3 class="card-title">🔍 नोंदी फिल्टर करा</h3>
+  <h3 class="card-title">📤 नोंदी एक्सपोर्ट करा</h3>
 
-      <div class="filter-box">
+  <div class="export-flex">
+    <button class="btn-export" @click="downloadCSV">
+      📄 CSV डाउनलोड
+    </button>
 
-        <input v-model="filter.name" placeholder="👤 नावाने शोधा" />
+    <button class="btn-export" @click="downloadPDF">
+      📕 PDF डाउनलोड
+    </button>
+  </div>
+</section>
 
-        <input v-model="filter.date" type="date" />
-
-        <select v-model="filter.month">
-          <option value="">महिना</option>
-          <option v-for="m in 12" :key="m" :value="m">{{ m }} महिना</option>
-        </select>
-
-        <select v-model="filter.year">
-          <option value="">वर्ष</option>
-          <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-        </select>
-
-        <button class="btn-small" @click="filterToday">आज</button>
-        <button class="btn-small" @click="filterWeek">या आठवड्यातील</button>
-
-        <button class="btn-small clear" @click="clearFilters">❌ क्लिअर</button>
-
-      </div>
-    </section>
-
-    <!-- Export Section -->
-    <section class="card fade-in">
-      <h3 class="card-title">📤 नोंदी एक्सपोर्ट करा</h3>
-
-      <div class="export-buttons">
-        <button class="btn-primary" @click="downloadCSV">📄 CSV डाउनलोड</button>
-        <button class="btn-primary" @click="downloadPDF">📕 PDF डाउनलोड</button>
-      </div>
-    </section>
 
     <!-- Payment / Records Table -->
     <section class="card fade-in">
@@ -437,6 +456,101 @@ input[type="checkbox"] {
   font-weight: 500;
   color: #2e7d32;
   font-size: 0.9rem;
+}
+
+
+/* FILTER GRID */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 1rem;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-item label {
+  font-size: 0.8rem;
+  color: #2e7d32;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.filter-item input,
+.filter-item select {
+  padding: 0.7rem;
+  border-radius: 10px;
+  border: 1px solid #d9eadf;
+  background: #ffffff;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.filter-item input:focus,
+.filter-item select:focus {
+  border-color: #43a047;
+  box-shadow: 0 0 6px rgba(67, 160, 71, 0.2);
+}
+
+/* FILTER ACTIONS */
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-small {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #2e7d32;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.btn-small:hover {
+  background: #1b5e20;
+}
+
+.btn-small.clear {
+  background: #d32f2f;
+}
+
+.btn-small.clear:hover {
+  background: #b71c1c;
+}
+
+/* EXPORT SECTION */
+.export-flex {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-export {
+  background: #00796b;
+  color: #fff;
+  border: none;
+  padding: 0.9rem 1.4rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 121, 107, 0.15);
+  transition: 0.2s ease;
+}
+
+.btn-export:hover {
+  background: #004d40;
+  transform: translateY(-2px);
 }
 
 </style>
