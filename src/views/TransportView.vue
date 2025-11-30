@@ -159,6 +159,11 @@
       </div>
     </section>
   </div>
+
+  <section class="card fade-in">
+<h3 class="card-title">📊 मासिक वाहतूक विश्लेषण</h3>
+<canvas id="analyticsChart" height="120"></canvas>
+</section>
 </template>
 
 <script setup>
@@ -310,6 +315,73 @@ function downloadPDF() {
 function formatDate(d) {
   return new Date(d).toLocaleDateString("mr-IN")
 }
+
+
+
+import { onMounted, watch } from 'vue'
+import Chart from 'chart.js/auto'
+
+
+let chartInstance = null
+
+
+function generateAnalytics() {
+const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+
+
+const crateData = Array(12).fill(0)
+
+
+// Sum crates month-wise
+data.value.forEach(r => {
+const m = new Date(r.date).getMonth()
+crateData[m] += Number(r.crates)
+})
+
+
+const ctx = document.getElementById("analyticsChart")
+if (!ctx) return
+
+
+// Destroy old chart
+if (chartInstance) chartInstance.destroy()
+
+
+// Create new chart
+chartInstance = new Chart(ctx, {
+type: 'line',
+data: {
+labels: months,
+datasets: [{
+label: 'Monthly Crates Transported',
+data: crateData,
+fill: false,
+borderWidth: 2,
+tension: 0.3
+}]
+},
+options: {
+responsive: true,
+plugins: {
+legend: { display: true }
+},
+scales: {
+y: { beginAtZero: true }
+}
+}
+})
+}
+
+
+// Run analytics on load
+onMounted(() => {
+setTimeout(generateAnalytics, 300)
+})
+
+
+// Auto‑update when data changes
+watch(data, () => generateAnalytics(), { deep: true })
+
 </script>
 
 
