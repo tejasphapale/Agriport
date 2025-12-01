@@ -10,84 +10,87 @@
     <!-- Add Record -->
     <section class="card fade-in">
       <h3 class="card-title">➕ नवीन वाहतूक नोंद जोडा</h3>
+
       <form @submit.prevent="addRecord" class="form">
 
-        <!-- Customer Name -->
+        <!-- CUSTOMER -->
         <div class="input-with-mic">
           <input v-model="customer" placeholder="👤 ग्राहकाचे नाव" list="customerSuggestions" required />
+          <button type="button" class="mic-btn" @click="startMic(customer)">
+            🎤
+          </button>
         </div>
 
         <datalist id="customerSuggestions">
           <option v-for="c in customerList" :key="c">{{ c }}</option>
         </datalist>
 
-        <!-- Vyapari -->
+        <!-- VYAPARI -->
         <div class="input-with-mic">
           <input v-model="vyapari" placeholder="🏪 व्यापाऱ्याचे नाव" list="vyapariSuggestions" required />
+          <button type="button" class="mic-btn" @click="startMic(vyapari)">
+            🎤
+          </button>
         </div>
 
         <datalist id="vyapariSuggestions">
           <option v-for="c in vyapariList" :key="c">{{ c }}</option>
         </datalist>
 
-        <!-- Mobile -->
-        <div class="input-with-mic">
-          <input v-model="mobile" placeholder="📞 मोबाईल नंबर" type="tel" maxlength="10" required />
-        </div>
+        <!-- MOBILE -->
+        <input
+          v-model="mobile"
+          placeholder="📞 मोबाईल नंबर"
+          class="input"
+          type="tel"
+          maxlength="10"
+          required
+        />
 
-        <!-- Crop -->
+        <!-- CROP -->
         <div class="input-with-mic">
           <input v-model="crop" placeholder="🌾 पिकाचे नाव" list="cropSuggestions" required />
+          <button type="button" class="mic-btn" @click="startMic(crop)">
+            🎤
+          </button>
         </div>
 
         <datalist id="cropSuggestions">
           <option v-for="c in cropList" :key="c">{{ c }}</option>
         </datalist>
 
-        <!-- Crates -->
-        <div class="input-with-mic">
-          <input v-model="crates" type="text" placeholder="📦 क्रेट्सची संख्या" required />
-        </div>
+        <!-- CRATES -->
+        <input
+          v-model="crates"
+          placeholder="📦 क्रेट्सची संख्या"
+          class="input"
+          required
+        />
 
-        <!-- Date -->
-        <input v-model="date" type="date" required />
+        <!-- DATE -->
+        <input v-model="date" type="date" class="input" required />
 
         <button type="submit" class="btn-primary">💾 नोंद जतन करा</button>
       </form>
     </section>
 
-
-    <!-- FILTER SECTION -->
+    <!-- FILTERS -->
     <section class="card fade-in">
       <h3 class="card-title">🔍 नोंदी फिल्टर करा</h3>
 
       <div class="filter-grid">
 
-        <div class="filter-item">
-          <label>👤 ग्राहकाचे नाव</label>
-          <input v-model="filter.name" placeholder="नावाने शोधा" />
-        </div>
+        <input v-model="filter.name" placeholder="👤 ग्राहकाचे नाव" />
+        <input v-model="filter.date" type="date" />
+        <select v-model="filter.month">
+          <option value="">महिना निवडा</option>
+          <option v-for="m in 12" :key="m" :value="m">{{ m }} महिना</option>
+        </select>
 
-        <div class="filter-item">
-          <label>📅 तारीख</label>
-          <input v-model="filter.date" type="date" />
-        </div>
-
-        <div class="filter-item">
-          <label>🗓 महिना</label>
-          <select v-model="filter.month">
-            <option value="">महिना निवडा</option>
-            <option v-for="m in 12" :key="m" :value="m">{{ m }} महिना</option>
-          </select>
-        </div>
-
-        <div class="filter-item">
-          <label>📆 वर्ष</label>
-          <select v-model="filter.year">
-            <option value="">वर्ष निवडा</option>
-            <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-          </select>
-        </div>
+        <select v-model="filter.year">
+          <option value="">वर्ष निवडा</option>
+          <option v-for="y in years" :key="y">{{ y }}</option>
+        </select>
 
       </div>
 
@@ -98,28 +101,21 @@
       </div>
     </section>
 
-
-    <!-- EXPORT SECTION -->
+    <!-- EXPORT -->
     <section class="card fade-in">
       <h3 class="card-title">📤 नोंदी एक्सपोर्ट करा</h3>
 
       <div class="export-flex">
-        <button class="btn-export" @click="downloadCSV">
-          📄 CSV डाउनलोड
-        </button>
-
-        <button class="btn-export" @click="downloadPDF">
-          📕 PDF डाउनलोड
-        </button>
+        <button class="btn-export" @click="downloadCSV">📄 CSV डाउनलोड</button>
+        <button class="btn-export" @click="downloadPDF">📕 PDF डाउनलोड</button>
       </div>
     </section>
 
-
-    <!-- Payment / Records Table -->
+    <!-- TABLE -->
     <section class="card fade-in">
-      <h3 class="card-title">📋 वाहतूक नोंदी व पेमेंट्स</h3>
+      <h3 class="card-title">📋 नोंदी व पेमेंट</h3>
 
-      <div class="table-responsive" v-if="filteredPaginated.length">
+      <div v-if="filteredPaginated.length" class="table-responsive">
         <table>
           <thead>
             <tr>
@@ -132,17 +128,18 @@
               <th>पेमेंट</th>
             </tr>
           </thead>
+
           <tbody>
             <tr v-for="item in filteredPaginated" :key="item.id">
-              <td class="cell-left">{{ item.customer }}</td>
-              <td class="cell-left">{{ item.vyapari }}</td>
+              <td>{{ item.customer }}</td>
+              <td>{{ item.vyapari }}</td>
               <td>{{ item.mobile }}</td>
               <td>{{ item.crop }}</td>
               <td>{{ item.crates }}</td>
               <td>{{ formatDate(item.date) }}</td>
               <td>
                 <input type="checkbox" v-model="item.paid" @change="saveRecords" />
-                {{ item.paid ? 'Paid' : 'Unpaid' }}
+                {{ item.paid ? "Paid" : "Unpaid" }}
               </td>
             </tr>
           </tbody>
@@ -151,28 +148,23 @@
 
       <p v-else class="empty-msg">⚠ नोंदी सापडल्या नाहीत</p>
 
-      <div class="pagination" v-if="filteredPaginated.length">
-        <button @click="prevPage" :disabled="currentPage===1">⏮ मागे</button>
+      <div v-if="filteredPaginated.length" class="pagination">
+        <button @click="prevPage" :disabled="currentPage == 1">⬅</button>
         <span>पृष्ठ {{ currentPage }} / {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="currentPage===totalPages">पुढे ⏭</button>
+        <button @click="nextPage" :disabled="currentPage == totalPages">➡</button>
       </div>
+
     </section>
 
-
-    <!-- ANALYTICS -->
+    <!-- CHART -->
     <section class="card fade-in">
-      <h3 class="card-title">📊 मासिक वाहतूक विश्लेषण</h3>
-      <canvas id="analyticsChart" height="120"></canvas>
+      <h3 class="card-title">📊 मासिक विश्लेषण</h3>
+      <canvas id="analyticsChart" height="110"></canvas>
     </section>
-<div class="input-with-mic">
-  <input v-model="customer" placeholder="👤 ग्राहकाचे नाव" list="customerSuggestions" required />
-  <button type="button" class="mic-btn" @click="startMic(customer)">
-    🎤
-  </button>
-</div>
 
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
