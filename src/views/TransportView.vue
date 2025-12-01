@@ -10,87 +10,76 @@
     <!-- Add Record -->
     <section class="card fade-in">
       <h3 class="card-title">➕ नवीन वाहतूक नोंद जोडा</h3>
-
       <form @submit.prevent="addRecord" class="form">
 
-        <!-- CUSTOMER -->
+        <!-- Customer Name -->
         <div class="input-with-mic">
           <input v-model="customer" placeholder="👤 ग्राहकाचे नाव" list="customerSuggestions" required />
-          <button type="button" class="mic-btn" @click="startMic(customer)">
-            🎤
-          </button>
         </div>
 
         <datalist id="customerSuggestions">
           <option v-for="c in customerList" :key="c">{{ c }}</option>
         </datalist>
 
-        <!-- VYAPARI -->
+        <!-- Mobile -->
         <div class="input-with-mic">
-          <input v-model="vyapari" placeholder="🏪 व्यापाऱ्याचे नाव" list="vyapariSuggestions" required />
-          <button type="button" class="mic-btn" @click="startMic(vyapari)">
-            🎤
-          </button>
+          <input v-model="mobile" placeholder="📞 मोबाईल नंबर" type="tel" maxlength="10" required />
         </div>
 
-        <datalist id="vyapariSuggestions">
-          <option v-for="c in vyapariList" :key="c">{{ c }}</option>
-        </datalist>
-
-        <!-- MOBILE -->
-        <input
-          v-model="mobile"
-          placeholder="📞 मोबाईल नंबर"
-          class="input"
-          type="tel"
-          maxlength="10"
-          required
-        />
-
-        <!-- CROP -->
+        <!-- Crop -->
         <div class="input-with-mic">
           <input v-model="crop" placeholder="🌾 पिकाचे नाव" list="cropSuggestions" required />
-          <button type="button" class="mic-btn" @click="startMic(crop)">
-            🎤
-          </button>
         </div>
 
         <datalist id="cropSuggestions">
           <option v-for="c in cropList" :key="c">{{ c }}</option>
         </datalist>
 
-        <!-- CRATES -->
-        <input
-          v-model="crates"
-          placeholder="📦 क्रेट्सची संख्या"
-          class="input"
-          required
-        />
+        <!-- Crates -->
+        <div class="input-with-mic">
+          <input v-model="crates" type="text" placeholder="📦 क्रेट्सची संख्या" required />
+        </div>
 
-        <!-- DATE -->
-        <input v-model="date" type="date" class="input" required />
+        <!-- Date -->
+        <input v-model="date" type="date" required />
 
         <button type="submit" class="btn-primary">💾 नोंद जतन करा</button>
       </form>
     </section>
 
-    <!-- FILTERS -->
+
+
+    <!-- FILTER SECTION -->
     <section class="card fade-in">
       <h3 class="card-title">🔍 नोंदी फिल्टर करा</h3>
 
       <div class="filter-grid">
 
-        <input v-model="filter.name" placeholder="👤 ग्राहकाचे नाव" />
-        <input v-model="filter.date" type="date" />
-        <select v-model="filter.month">
-          <option value="">महिना निवडा</option>
-          <option v-for="m in 12" :key="m" :value="m">{{ m }} महिना</option>
-        </select>
+        <div class="filter-item">
+          <label>👤 ग्राहकाचे नाव</label>
+          <input v-model="filter.name" placeholder="नावाने शोधा" />
+        </div>
 
-        <select v-model="filter.year">
-          <option value="">वर्ष निवडा</option>
-          <option v-for="y in years" :key="y">{{ y }}</option>
-        </select>
+        <div class="filter-item">
+          <label>📅 तारीख</label>
+          <input v-model="filter.date" type="date" />
+        </div>
+
+        <div class="filter-item">
+          <label>🗓 महिना</label>
+          <select v-model="filter.month">
+            <option value="">महिना निवडा</option>
+            <option v-for="m in 12" :key="m" :value="m">{{ m }} महिना</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label>📆 वर्ष</label>
+          <select v-model="filter.year">
+            <option value="">वर्ष निवडा</option>
+            <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+          </select>
+        </div>
 
       </div>
 
@@ -101,26 +90,32 @@
       </div>
     </section>
 
-    <!-- EXPORT -->
+
+    <!-- EXPORT SECTION -->
     <section class="card fade-in">
       <h3 class="card-title">📤 नोंदी एक्सपोर्ट करा</h3>
 
       <div class="export-flex">
-        <button class="btn-export" @click="downloadCSV">📄 CSV डाउनलोड</button>
-        <button class="btn-export" @click="downloadPDF">📕 PDF डाउनलोड</button>
+        <button class="btn-export" @click="downloadCSV">
+          📄 CSV डाउनलोड
+        </button>
+
+        <button class="btn-export" @click="downloadPDF">
+          📕 PDF डाउनलोड
+        </button>
       </div>
     </section>
 
-    <!-- TABLE -->
-    <section class="card fade-in">
-      <h3 class="card-title">📋 नोंदी व पेमेंट</h3>
 
-      <div v-if="filteredPaginated.length" class="table-responsive">
+    <!-- Payment / Records Table -->
+    <section class="card fade-in">
+      <h3 class="card-title">📋 वाहतूक नोंदी व पेमेंट्स</h3>
+
+      <div class="table-responsive" v-if="filteredPaginated.length">
         <table>
           <thead>
             <tr>
               <th>ग्राहक</th>
-              <th>व्यापारी</th>
               <th>मोबाईल</th>
               <th>पिक</th>
               <th>क्रेट्स</th>
@@ -128,18 +123,16 @@
               <th>पेमेंट</th>
             </tr>
           </thead>
-
           <tbody>
             <tr v-for="item in filteredPaginated" :key="item.id">
-              <td>{{ item.customer }}</td>
-              <td>{{ item.vyapari }}</td>
+              <td class="cell-left">{{ item.customer }}</td>
               <td>{{ item.mobile }}</td>
               <td>{{ item.crop }}</td>
               <td>{{ item.crates }}</td>
               <td>{{ formatDate(item.date) }}</td>
               <td>
                 <input type="checkbox" v-model="item.paid" @change="saveRecords" />
-                {{ item.paid ? "Paid" : "Unpaid" }}
+                {{ item.paid ? 'Paid' : 'Unpaid' }}
               </td>
             </tr>
           </tbody>
@@ -148,61 +141,38 @@
 
       <p v-else class="empty-msg">⚠ नोंदी सापडल्या नाहीत</p>
 
-      <div v-if="filteredPaginated.length" class="pagination">
-        <button @click="prevPage" :disabled="currentPage == 1">⬅</button>
+      <div class="pagination" v-if="filteredPaginated.length">
+        <button @click="prevPage" :disabled="currentPage===1">⏮ मागे</button>
         <span>पृष्ठ {{ currentPage }} / {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="currentPage == totalPages">➡</button>
+        <button @click="nextPage" :disabled="currentPage===totalPages">पुढे ⏭</button>
       </div>
-
     </section>
 
-    <!-- CHART -->
+
+
+    <!-- ANALYTICS -->
     <section class="card fade-in">
-      <h3 class="card-title">📊 मासिक विश्लेषण</h3>
-      <canvas id="analyticsChart" height="110"></canvas>
+      <h3 class="card-title">📊 मासिक वाहतूक विश्लेषण</h3>
+      <canvas id="analyticsChart" height="120"></canvas>
     </section>
 
   </div>
 </template>
 
-
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import Chart from "chart.js/auto";
 
-// MIC FUNCTION
-function startMic(modelRef) {
-  if (!('webkitSpeechRecognition' in window)) {
-    alert("Your browser does not support Speech Recognition.");
-    return;
-  }
 
-  const recognition = new webkitSpeechRecognition();
-  recognition.lang = "mr-IN";      // Marathi  
-  recognition.continuous = false;
-  recognition.interimResults = false;
-
-  recognition.start();
-
-  recognition.onresult = (event) => {
-    const text = event.results[0][0].transcript;
-    modelRef.value = text;
-  };
-
-  recognition.onerror = () => {
-    alert("Mic Error! Please try again.");
-  };
-}
-
-// INPUT MODELS
+// INPUTS
 const customer = ref('');
-const vyapari = ref('');
 const mobile = ref('');
 const crop = ref('');
 const crates = ref('');
 const date = ref('');
 
-// STORAGE
+
+// STORAGE DATA
 const data = ref([]);
 
 // FILTERS
@@ -213,23 +183,34 @@ const filter = ref({
   year: ""
 });
 
-// Load from storage
+
+// PAGINATION
+const currentPage = ref(1);
+const pageSize = 7;
+
+
+// Load stored records
 onMounted(() => {
   const stored = localStorage.getItem("transportRecords");
-  if (stored) data.value = JSON.parse(stored);
+  if (stored) {
+    try {
+      data.value = JSON.parse(stored);
+    } catch {}
+  }
 });
 
-// Save
+
+// Save records
 function saveRecords() {
   localStorage.setItem("transportRecords", JSON.stringify(data.value));
 }
 
-// Add record
+
+// Add new record
 function addRecord() {
   data.value.unshift({
     id: Date.now(),
     customer: customer.value,
-    vyapari: vyapari.value,
     mobile: mobile.value,
     crop: crop.value,
     crates: crates.value,
@@ -240,7 +221,6 @@ function addRecord() {
   saveRecords();
 
   customer.value = "";
-  vyapari.value = "";
   mobile.value = "";
   crop.value = "";
   crates.value = "";
@@ -249,16 +229,24 @@ function addRecord() {
   currentPage.value = 1;
 }
 
-// Auto suggestion lists
-const customerList = computed(() => [...new Set(data.value.map(r => r.customer))]);
-const vyapariList = computed(() => [...new Set(data.value.map(r => r.vyapari))]);
-const cropList = computed(() => [...new Set(data.value.map(r => r.crop))]);
-const years = computed(() => [...new Set(data.value.map(r => new Date(r.date).getFullYear()))]);
 
-// Filters
+// Auto suggestions list
+const customerList = computed(() =>
+  [...new Set(data.value.map(r => r.customer))]
+);
+const cropList = computed(() =>
+  [...new Set(data.value.map(r => r.crop))]
+);
+const years = computed(() =>
+  [...new Set(data.value.map(r => new Date(r.date).getFullYear()))]
+);
+
+
+// FILTER LOGIC
 const filteredData = computed(() => {
   return data.value.filter(r => {
     const d = new Date(r.date);
+
     return (
       (!filter.value.name || r.customer.includes(filter.value.name)) &&
       (!filter.value.date || r.date === filter.value.date) &&
@@ -268,30 +256,34 @@ const filteredData = computed(() => {
   });
 });
 
-// Clear Filters
+
+// CLEAR FILTERS
 function clearFilters() {
   filter.value = { name: "", date: "", month: "", year: "" };
 }
 
+
+// TODAY FILTER
 function filterToday() {
   filter.value.date = new Date().toISOString().split("T")[0];
 }
 
+
+// WEEK FILTER
 function filterWeek() {
   const now = new Date();
-  const weekStart = new Date(now);
+  const weekStart = new Date();
   weekStart.setDate(now.getDate() - 7);
 
   filter.value = { name: "", date: "", month: "", year: "" };
+
   data.value = data.value.filter(r => new Date(r.date) >= weekStart);
 }
 
-// Pagination
-const currentPage = ref(1);
-const pageSize = 7;
 
-const totalPages = computed(
-  () => Math.max(1, Math.ceil(filteredData.value.length / pageSize))
+// PAGINATION
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredData.value.length / pageSize))
 );
 
 const filteredPaginated = computed(() => {
@@ -302,18 +294,18 @@ const filteredPaginated = computed(() => {
 function nextPage() {
   if (currentPage.value < totalPages.value) currentPage.value++;
 }
-
 function prevPage() {
   if (currentPage.value > 1) currentPage.value--;
 }
 
-// CSV Export
+
+// CSV EXPORT
 function downloadCSV() {
   const rows = filteredData.value.map(r =>
-    `${r.customer},${r.vyapari},${r.mobile},${r.crop},${r.crates},${r.date},${r.paid ? "Paid" : "Unpaid"}`
+    `${r.customer},${r.mobile},${r.crop},${r.crates},${r.date},${r.paid ? "Paid" : "Unpaid"}`
   );
 
-  const csv = "Customer,Vyapari,Mobile,Crop,Crates,Date,Paid\n" + rows.join("\n");
+  const csv = "Customer,Mobile,Crop,Crates,Date,Paid\n" + rows.join("\n");
 
   const blob = new Blob([csv], { type: "text/csv" });
   const link = document.createElement("a");
@@ -322,10 +314,11 @@ function downloadCSV() {
   link.click();
 }
 
-// PDF Export
+
+// PDF EXPORT
 function downloadPDF() {
   const content = filteredData.value
-    .map(r => `${r.customer} | ${r.vyapari} | ${r.mobile} | ${r.crop} | ${r.crates} | ${r.date} | ${r.paid ? "Paid" : "Unpaid"}`)
+    .map(r => `${r.customer} | ${r.mobile} | ${r.crop} | ${r.crates} | ${r.date} | ${r.paid ? "Paid" : "Unpaid"}`)
     .join("\n");
 
   const blob = new Blob([content], { type: "application/pdf" });
@@ -335,15 +328,18 @@ function downloadPDF() {
   link.click();
 }
 
+// DATE FORMAT
 function formatDate(d) {
   return new Date(d).toLocaleDateString("mr-IN");
 }
 
-// Chart
+
+// ANALYTICS CHART
 let chartInstance = null;
 
 function generateAnalytics() {
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
   const crateData = Array(12).fill(0);
 
   data.value.forEach(r => {
@@ -369,17 +365,28 @@ function generateAnalytics() {
         }
       ]
     },
-    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
   });
 }
 
-onMounted(() => setTimeout(generateAnalytics, 300));
+onMounted(() => {
+  setTimeout(generateAnalytics, 300);
+});
+
 watch(data, () => generateAnalytics(), { deep: true });
+
 </script>
 
 
+
 <style scoped>
-/* --- BEAUTIFUL UI STYLE --- */
+/* --- BEAUTIFUL UI STYLE --- */ 
+
 
 .page{padding:0.5rem; max-width:1100px;margin:auto;font-family:'Poppins',sans-serif;background:linear-gradient(145deg,#f1f8e9,#ffffff);border-radius:18px;box-shadow:0 6px 25px rgba(0,0,0,0.08);min-height:100vh;}
 .page-header{text-align:center;margin-bottom:1.5rem;}
@@ -432,23 +439,5 @@ td { padding: 10px; text-align:center; color:#2e7d32; }
 
 .export-flex{display:flex;gap:12px;justify-content:center;}
 .btn-export{background:#00796b;color:#fff;padding:0.9rem 1.4rem;border-radius:10px;}
-
-
-.mic-btn {
-  position:absolute;
-  right:10px;
-  background:#2e7d32;
-  border:none;
-  color:white;
-  padding:6px 10px;
-  border-radius:50%;
-  cursor:pointer;
-  font-size:14px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.2);
-}
-
-.mic-btn:hover {
-  background:#1b5e20;
-}
 
 </style>
