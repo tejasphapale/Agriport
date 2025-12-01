@@ -164,6 +164,12 @@
       <h3 class="card-title">📊 मासिक वाहतूक विश्लेषण</h3>
       <canvas id="analyticsChart" height="120"></canvas>
     </section>
+<div class="input-with-mic">
+  <input v-model="customer" placeholder="👤 ग्राहकाचे नाव" list="customerSuggestions" required />
+  <button type="button" class="mic-btn" @click="startMic(customer)">
+    🎤
+  </button>
+</div>
 
   </div>
 </template>
@@ -172,7 +178,31 @@
 import { ref, computed, watch, onMounted } from "vue";
 import Chart from "chart.js/auto";
 
-// INPUTS
+// MIC FUNCTION
+function startMic(modelRef) {
+  if (!('webkitSpeechRecognition' in window)) {
+    alert("Your browser does not support Speech Recognition.");
+    return;
+  }
+
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = "mr-IN";      // Marathi  
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.start();
+
+  recognition.onresult = (event) => {
+    const text = event.results[0][0].transcript;
+    modelRef.value = text;
+  };
+
+  recognition.onerror = () => {
+    alert("Mic Error! Please try again.");
+  };
+}
+
+// INPUT MODELS
 const customer = ref('');
 const vyapari = ref('');
 const mobile = ref('');
@@ -228,21 +258,10 @@ function addRecord() {
 }
 
 // Auto suggestion lists
-const customerList = computed(() =>
-  [...new Set(data.value.map(r => r.customer))]
-);
-
-const vyapariList = computed(() =>
-  [...new Set(data.value.map(r => r.vyapari))]
-);
-
-const cropList = computed(() =>
-  [...new Set(data.value.map(r => r.crop))]
-);
-
-const years = computed(() =>
-  [...new Set(data.value.map(r => new Date(r.date).getFullYear()))]
-);
+const customerList = computed(() => [...new Set(data.value.map(r => r.customer))]);
+const vyapariList = computed(() => [...new Set(data.value.map(r => r.vyapari))]);
+const cropList = computed(() => [...new Set(data.value.map(r => r.crop))]);
+const years = computed(() => [...new Set(data.value.map(r => new Date(r.date).getFullYear()))]);
 
 // Filters
 const filteredData = computed(() => {
@@ -257,6 +276,7 @@ const filteredData = computed(() => {
   });
 });
 
+// Clear Filters
 function clearFilters() {
   filter.value = { name: "", date: "", month: "", year: "" };
 }
@@ -271,7 +291,6 @@ function filterWeek() {
   weekStart.setDate(now.getDate() - 7);
 
   filter.value = { name: "", date: "", month: "", year: "" };
-
   data.value = data.value.filter(r => new Date(r.date) >= weekStart);
 }
 
@@ -279,8 +298,8 @@ function filterWeek() {
 const currentPage = ref(1);
 const pageSize = 7;
 
-const totalPages = computed(() =>
-  Math.max(1, Math.ceil(filteredData.value.length / pageSize))
+const totalPages = computed(
+  () => Math.max(1, Math.ceil(filteredData.value.length / pageSize))
 );
 
 const filteredPaginated = computed(() => {
@@ -324,7 +343,6 @@ function downloadPDF() {
   link.click();
 }
 
-// Format date
 function formatDate(d) {
   return new Date(d).toLocaleDateString("mr-IN");
 }
@@ -363,13 +381,9 @@ function generateAnalytics() {
   });
 }
 
-onMounted(() => {
-  setTimeout(generateAnalytics, 300);
-});
-
+onMounted(() => setTimeout(generateAnalytics, 300));
 watch(data, () => generateAnalytics(), { deep: true });
 </script>
-
 
 
 <style scoped>
@@ -426,5 +440,23 @@ td { padding: 10px; text-align:center; color:#2e7d32; }
 
 .export-flex{display:flex;gap:12px;justify-content:center;}
 .btn-export{background:#00796b;color:#fff;padding:0.9rem 1.4rem;border-radius:10px;}
+
+
+.mic-btn {
+  position:absolute;
+  right:10px;
+  background:#2e7d32;
+  border:none;
+  color:white;
+  padding:6px 10px;
+  border-radius:50%;
+  cursor:pointer;
+  font-size:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+}
+
+.mic-btn:hover {
+  background:#1b5e20;
+}
 
 </style>
